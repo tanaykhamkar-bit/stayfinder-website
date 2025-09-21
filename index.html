@@ -602,15 +602,17 @@
     <nav class="navbar">
         <div class="nav-container">
             <div class="logo">StayFinder</div>
-            <div class="nav-links">
+                            <div class="nav-links">
                 <a href="#" id="homeLink">Home</a>
                 <a href="#" id="loginBtn">Login</a>
                 <a href="#" id="registerBtn">Register</a>
+                <a href="#" id="adminLink" style="display: none; color: #ff6b6b;">Admin Panel</a>
                 <div class="user-menu" id="userMenu">
                     <div class="user-avatar" id="userAvatar"></div>
                     <div class="dropdown" id="userDropdown">
                         <a href="#" id="profileLink">Profile</a>
                         <a href="#" id="bookingsLink">My Bookings</a>
+                        <a href="#" id="adminPanelLink" style="display: none;">Admin Panel</a>
                         <a href="#" id="logoutBtn">Logout</a>
                     </div>
                 </div>
@@ -735,12 +737,12 @@
     <script>
         // Firebase Configuration (You'll need to replace this with your actual config)
         const firebaseConfig = {
-            apiKey: "AIzaSyB_iQkaFi6xl6oLi-GINVminASsNwVRzo8",
-            authDomain: "stayfinder-app-36712.firebaseapp.com",
-            projectId: "stayfinder-app-36712",
-            storageBucket: "stayfinder-app-36712.firebasestorage.app",
-            messagingSenderId: "988731098368",
-            appId: "1:988731098368:web:6df395ebf4a5127c3a9fe5"
+            apiKey: "your-api-key",
+            authDomain: "your-project.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "your-app-id"
         };
 
         // Initialize Firebase
@@ -872,6 +874,20 @@
             elements.homeLink.addEventListener('click', () => showPage('main'));
             elements.logoutBtn.addEventListener('click', logout);
             elements.userAvatar.addEventListener('click', toggleUserDropdown);
+            
+            // Admin panel links
+            const adminLink = document.getElementById('adminLink');
+            const adminPanelLink = document.getElementById('adminPanelLink');
+            if (adminLink) {
+                adminLink.addEventListener('click', () => {
+                    window.open('admin.html', '_blank');
+                });
+            }
+            if (adminPanelLink) {
+                adminPanelLink.addEventListener('click', () => {
+                    window.open('admin.html', '_blank');
+                });
+            }
 
             // Search
             elements.searchForm.addEventListener('submit', handleSearch);
@@ -979,6 +995,17 @@
             if (currentUser) {
                 const initial = currentUser.email.charAt(0).toUpperCase();
                 elements.userAvatar.textContent = initial;
+                
+                // Check if user is admin and show admin links
+                db.collection('users').doc(currentUser.uid).get()
+                    .then((doc) => {
+                        if (doc.exists && doc.data().role === 'admin') {
+                            const adminLink = document.getElementById('adminLink');
+                            const adminPanelLink = document.getElementById('adminPanelLink');
+                            if (adminLink) adminLink.style.display = 'block';
+                            if (adminPanelLink) adminPanelLink.style.display = 'block';
+                        }
+                    });
             }
         }
 
@@ -986,6 +1013,13 @@
             elements.loginBtn.style.display = 'block';
             elements.registerBtn.style.display = 'block';
             elements.userMenu.style.display = 'none';
+            
+            // Hide admin links
+            const adminLink = document.getElementById('adminLink');
+            const adminPanelLink = document.getElementById('adminPanelLink');
+            if (adminLink) adminLink.style.display = 'none';
+            if (adminPanelLink) adminPanelLink.style.display = 'none';
+            
             hideUserDropdown();
         }
 
