@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Bookings</title>
+</head>
+<body>
+
+<h2>My Bookings</h2>
+<div id="bookingList"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+<script>
+
+var firebaseConfig = {
+  apiKey: "AIzaSyB_iQkaFi6xl6oLi-GINVminASsNwVRzo8",
+  authDomain: "stayfinder-app-36712.firebaseapp.com",
+  projectId: "stayfinder-app-36712",
+  storageBucket: "stayfinder-app-36712.firebasestorage.app",
+  messagingSenderId: "988731098368",
+  appId: "1:988731098368:web:6df395ebf4a5127c3a9fe5
+};
+
+firebase.initializeApp(firebaseConfig);
+
+var auth = firebase.auth();
+var db = firebase.firestore();
+
+auth.signInAnonymously().then(function() {
+
+  var user = auth.currentUser;
+
+  db.collection("bookings")
+    .where("userId", "==", user.uid)
+    .get()
+    .then(function(snapshot) {
+
+      snapshot.forEach(function(doc) {
+
+        var data = doc.data();
+
+        document.getElementById("bookingList").innerHTML += `
+          <div style="border:1px solid black; margin:10px; padding:10px;">
+            <h3>${data.hostelName}</h3>
+            <p>₹${data.price}</p>
+            <p>${new Date(data.date.seconds * 1000).toLocaleString()}</p>
+          </div>
+        `;
+      });
+
+    });
+
+});
+
+</script>
+
+</body>
+</html>
+
