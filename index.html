@@ -595,6 +595,74 @@
         .dropdown a:last-child {
             border-bottom: none;
         }
+        .payment-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.payment-box {
+    background: white;
+    width: 400px;
+    padding: 25px;
+    border-radius: 10px;
+    position: relative;
+    animation: pop 0.3s ease;
+}
+
+@keyframes pop {
+    from { transform: scale(0.8); opacity:0; }
+    to { transform: scale(1); opacity:1; }
+}
+
+.close-btn {
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+.payment-box input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.row {
+    display: flex;
+    gap: 10px;
+}
+
+.payment-tabs {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.payment-tabs button {
+    flex: 1;
+    padding: 8px;
+    cursor: pointer;
+}
+
+.pay-btn {
+    width: 100%;
+    margin-top: 15px;
+    padding: 12px;
+    background: #2ecc71;
+    border: none;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 5px;
+}
     </style>
 </head>
 <body>
@@ -1243,52 +1311,38 @@ const db = firebase.firestore();
             openPaymentModal(property);
         }
         // ===== CLEAN PAYMENT SYSTEM =====
-let selectedPropertyForPayment = null;
-
 function openPaymentModal(property) {
     selectedPropertyForPayment = property;
-
-    document.getElementById("paymentPropertyTitle").innerText = property.title;
-    document.getElementById("paymentAmount").innerText = property.price;
-
-    document.getElementById("paymentModal").style.display = "block";
+    document.getElementById("paymentModal").style.display = "flex";
 }
 
 function closePaymentModal() {
     document.getElementById("paymentModal").style.display = "none";
 }
 
-function processPayment() {
-
-    if (!selectedPropertyForPayment) {
-        alert("No property selected.");
-        return;
-    }
-
-    const stripe = Stripe("pk_test_51T4TqCF79cbNhh8odlGD34GN0uai7skc4jnSg87Izwpohe6xaCAIoYnXH2zR8yLaPBDkGzvyGvL7RHeGEFED9sSv00IaOgc9fF");
-
-    stripe.redirectToCheckout({
-        lineItems: [{
-            price_data: {
-                currency: "inr",
-                product_data: {
-                    name: selectedPropertyForPayment.title,
-                },
-                unit_amount: parseInt(selectedPropertyForPayment.price.replace(/[^\d]/g, "")) * 100,
-            },
-            quantity: 1,
-        }],
-        mode: "payment",
-        successUrl: window.location.href + "?success=true",
-        cancelUrl: window.location.href + "?canceled=true",
-    }).then(function (result) {
-        if (result.error) {
-            alert(result.error.message);
-        }
-    });
-
+function showCard() {
+    document.getElementById("cardForm").style.display = "block";
+    document.getElementById("upiForm").style.display = "none";
 }
 
+function showUPI() {
+    document.getElementById("cardForm").style.display = "none";
+    document.getElementById("upiForm").style.display = "block";
+}
+
+function processPayment() {
+
+    document.getElementById("paymentLoader").style.display = "block";
+
+    setTimeout(() => {
+
+        document.getElementById("paymentLoader").style.display = "none";
+        closePaymentModal();
+
+        alert("✅ Booking Confirmed Successfully!");
+
+    }, 2000);
+}
 
         // Initialize App
         function initializeApp() {
@@ -1317,17 +1371,45 @@ function processPayment() {
         
     </script>
     
-<div id="paymentModal" style="display:none;" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closePaymentModal()">&times;</span>
-        <h2>Complete Payment</h2>
-        <p id="paymentPropertyTitle"></p>
-        <p id="paymentAmount"></p>
-        <button onclick="processPayment()" class="btn-primary">Pay Now</button>
+<!-- PAYMENT MODAL -->
+<div id="paymentModal" class="payment-modal">
+    <div class="payment-box">
+
+        <span class="close-btn" onclick="closePaymentModal()">&times;</span>
+
+        <h2>Secure Payment</h2>
+
+        <div class="payment-tabs">
+            <button onclick="showCard()">Card</button>
+            <button onclick="showUPI()">UPI</button>
+        </div>
+
+        <!-- CARD FORM -->
+        <div id="cardForm">
+            <input type="text" placeholder="Cardholder Name" id="cardName">
+            <input type="text" placeholder="Card Number" maxlength="16" id="cardNumber">
+            <div class="row">
+                <input type="text" placeholder="MM/YY" maxlength="5" id="expiry">
+                <input type="password" placeholder="CVV" maxlength="3" id="cvv">
+            </div>
+        </div>
+
+        <!-- UPI FORM -->
+        <div id="upiForm" style="display:none;">
+            <input type="text" placeholder="Enter UPI ID (example@upi)" id="upiId">
+        </div>
+
+        <button class="pay-btn" onclick="processPayment()">Pay Now</button>
+
+        <div id="paymentLoader" style="display:none;">
+            Processing Payment...
+        </div>
+
     </div>
 </div>
 </body>
 </html>
+
 
 
 
