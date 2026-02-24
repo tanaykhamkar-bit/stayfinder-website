@@ -1178,25 +1178,7 @@
                 return;
             }
             
-            // Create booking request
-            const booking = {
-                propertyId: propertyId,
-                userId: currentUser.uid,
-                userEmail: currentUser.email,
-                propertyTitle: property.title,
-                propertyPrice: property.price,
-                status: 'pending',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            // Add to bookings collection
-            db.collection('bookings').add(booking)
-                .then(() => {
-                    alert('Booking request sent! Admin will review your request shortly.');
-                })
-                .catch((error) => {
-                    alert('Error sending booking request: ' + error.message);
-                });
+            openPaymentModal(property);
         }
 
         // Initialize App
@@ -1226,3 +1208,4 @@
     </script>
 </body>
 </html>
+
