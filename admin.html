@@ -1,910 +1,105 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StayFinder Admin Panel</title>
-    
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    
-    <!-- Leaflet Map CSS & JS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <title>StayFinder</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #0f0f23;
-            color: #ffffff;
-            line-height: 1.6;
-        }
+  <style>
+    body {
+      font-family: Arial;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
 
-        .admin-header {
-            background: rgba(15, 15, 35, 0.95);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 1rem 0;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 15px;
+      text-align: center;
+    }
 
-        .admin-nav {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+    .container {
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
 
-        .admin-logo {
-            font-size: 1.8rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+    .card {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
 
-        .admin-user {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
+    button {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
 
-        .admin-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        .admin-tabs {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .tab-btn {
-            background: none;
-            border: none;
-            color: rgba(255, 255, 255, 0.7);
-            padding: 1rem 2rem;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border-bottom: 3px solid transparent;
-        }
-
-        .tab-btn.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
-        }
-
-        .tab-btn:hover {
-            color: #ffffff;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .admin-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .admin-card h3 {
-            color: #667eea;
-            margin-bottom: 1.5rem;
-            font-size: 1.3rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: rgba(255, 255, 255, 0.9);
-            font-weight: 500;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            color: #ffffff;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        .form-group textarea {
-            height: 100px;
-            resize: vertical;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: #ffffff;
-            border: none;
-            padding: 1rem 2rem;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: #ffffff;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 0.8rem 1.5rem;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-right: 1rem;
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: #ffffff;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-danger:hover {
-            background: #c82333;
-            transform: translateY(-1px);
-        }
-
-        .admin-map {
-            height: 500px;
-            width: 100%;
-            border-radius: 12px;
-            overflow: hidden;
-            margin-bottom: 2rem;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .admin-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .admin-table th {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 1rem;
-            text-align: left;
-            font-weight: 600;
-            color: #667eea;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .admin-table td {
-            padding: 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .admin-table tr:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .status-badge {
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-
-        .status-pending {
-            background: rgba(255, 193, 7, 0.2);
-            color: #ffc107;
-        }
-
-        .status-approved {
-            background: rgba(40, 167, 69, 0.2);
-            color: #28a745;
-        }
-
-        .status-rejected {
-            background: rgba(220, 53, 69, 0.2);
-            color: #dc3545;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 2rem;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(102, 126, 234, 0.5);
-        }
-
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #667eea;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-label {
-            color: rgba(255, 255, 255, 0.8);
-            font-weight: 500;
-        }
-
-        .message {
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            display: none;
-        }
-
-        .message.success {
-            background: rgba(40, 167, 69, 0.2);
-            border: 1px solid rgba(40, 167, 69, 0.5);
-            color: #28a745;
-        }
-
-        .message.error {
-            background: rgba(220, 53, 69, 0.2);
-            border: 1px solid rgba(220, 53, 69, 0.5);
-            color: #dc3545;
-        }
-
-        .property-list {
-            max-height: 400px;
-            overflow-y: auto;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .property-item {
-            padding: 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .property-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .property-info h4 {
-            color: #ffffff;
-            margin-bottom: 0.5rem;
-        }
-
-        .property-info p {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.9rem;
-        }
-
-        .property-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        @media (max-width: 768px) {
-            .admin-container {
-                padding: 1rem;
-            }
-            
-            .admin-tabs {
-                flex-wrap: wrap;
-            }
-            
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    button:hover {
+      background: #2980b9;
+    }
+  </style>
 </head>
 <body>
-    <!-- Admin Header -->
-    <header class="admin-header">
-        <div class="admin-nav">
-            <div class="admin-logo">StayFinder Admin</div>
-            <div class="admin-user">
-                <span id="adminName">Admin Panel</span>
-                <button class="btn-secondary" onclick="logout()">Logout</button>
-            </div>
-        </div>
-    </header>
 
-    <!-- Admin Container -->
-    <div class="admin-container">
-        <!-- Stats Overview -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-number" id="totalProperties">0</div>
-                <div class="stat-label">Total Properties</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="pendingBookings">0</div>
-                <div class="stat-label">Pending Bookings</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="totalUsers">0</div>
-                <div class="stat-label">Registered Users</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="approvedBookings">0</div>
-                <div class="stat-label">Approved Bookings</div>
-            </div>
-        </div>
+<header>
+  <h1>StayFinder</h1>
+  <a href="bookings.html" style="color:white;">My Bookings</a>
+</header>
 
-        <!-- Tab Navigation -->
-        <div class="admin-tabs">
-            <button class="tab-btn active" onclick="switchTab('properties')">Manage Properties</button>
-            <button class="tab-btn" onclick="switchTab('bookings')">Booking Requests</button>
-            <button class="tab-btn" onclick="switchTab('users')">User Management</button>
-        </div>
+<div class="container">
 
-        <!-- Properties Tab -->
-        <div id="propertiesTab" class="tab-content active">
-            <div class="admin-card">
-                <h3>Add New Property</h3>
-                <div class="message" id="propertyMessage"></div>
-                
-                <form id="propertyForm">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Property Title</label>
-                            <input type="text" id="propertyTitle" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Property Type</label>
-                            <select id="propertyType" required>
-                                <option value="">Select Type</option>
-                                <option value="hostel">Hostel</option>
-                                <option value="pg">PG</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Location</label>
-                            <input type="text" id="propertyLocation" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Price (per month)</label>
-                            <input type="text" id="propertyPrice" placeholder="₹8,000/month" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Description</label>
-                        <textarea id="propertyDescription" placeholder="Brief description of the property"></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Features (comma separated)</label>
-                        <input type="text" id="propertyFeatures" placeholder="WiFi, AC, Mess, Security" required>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Latitude</label>
-                            <input type="number" step="any" id="propertyLat" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Longitude</label>
-                            <input type="number" step="any" id="propertyLng" required>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="btn-primary">Add Property</button>
-                </form>
-            </div>
+  <div class="card">
+    <h3>Green Valley PG</h3>
+    <p>Location: Pune</p>
+    <p>Price: ₹7500</p>
+    <button onclick="startPayment('Green Valley PG', 7500)">Book Now</button>
+  </div>
 
-            <!-- Map for selecting coordinates -->
-            <div class="admin-card">
-                <h3>Click on Map to Set Coordinates</h3>
-                <div id="adminMap" class="admin-map"></div>
-                <p style="color: rgba(255,255,255,0.7); margin-top: 1rem;">
-                    Click anywhere on the map to automatically fill the latitude and longitude fields above.
-                </p>
-            </div>
+  <div class="card">
+    <h3>Sunrise Hostel</h3>
+    <p>Location: Mumbai</p>
+    <p>Price: ₹6500</p>
+    <button onclick="startPayment('Sunrise Hostel', 6500)">Book Now</button>
+  </div>
 
-            <!-- Existing Properties -->
-            <div class="admin-card">
-                <h3>Existing Properties</h3>
-                <div class="property-list" id="propertyList">
-                    <!-- Properties will be loaded here -->
-                </div>
-            </div>
-        </div>
+  <div class="card">
+    <h3>Metro PG</h3>
+    <p>Location: Delhi</p>
+    <p>Price: ₹8000</p>
+    <button onclick="startPayment('Metro PG', 8000)">Book Now</button>
+  </div>
 
-        <!-- Bookings Tab -->
-        <div id="bookingsTab" class="tab-content">
-            <div class="admin-card">
-                <h3>Booking Requests</h3>
-                <div class="table-container">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Registration Date</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="usersTableBody">
-                            <!-- Users will be loaded here -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
+  <div class="card">
+    <h3>City Stay PG</h3>
+    <p>Location: Bangalore</p>
+    <p>Price: ₹7200</p>
+    <button onclick="startPayment('City Stay PG', 7200)">Book Now</button>
+  </div>
 
-    <script>
-        // Firebase Configuration (Same as main site)
-        const firebaseConfig = {
-            apiKey: "AIzaSyB_iQkaFi6xl6oLi-GINVminASsNwVRzo8",
-            authDomain: "stayfinder-app-36712.firebaseapp.com",
-            projectId: "stayfinder-app-36712",
-            storageBucket: "stayfinder-app-36712.firebasestorage.app",
-            messagingSenderId: "988731098368",
-            appId: "1:988731098368:web:6df395ebf4a5127c3a9fe5"
-        };
+  <div class="card">
+    <h3>Comfort Living Hostel</h3>
+    <p>Location: Hyderabad</p>
+    <p>Price: ₹9000</p>
+    <button onclick="startPayment('Comfort Living Hostel', 9000)">Book Now</button>
+  </div>
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
+</div>
 
-        // Global Variables
-        let adminMap;
-        let currentUser = null;
-        let selectedCoordinates = { lat: 19.2404498544239, lng: 73.13241886605059 };
+<!-- Firebase CDN -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
-        // Initialize Admin Panel
-        function initializeAdmin() {
-            // Check if user is authenticated and is admin
-            auth.onAuthStateChanged((user) => {
-                if (user) {
-                    // Check if user has admin role
-                    db.collection('users').doc(user.uid).get()
-                        .then((doc) => {
-                            if (doc.exists && doc.data().role === 'admin') {
-                                currentUser = user;
-                                document.getElementById('adminName').textContent = doc.data().name || user.email;
-                                loadDashboardData();
-                                initializeAdminMap();
-                            } else {
-                                // Redirect non-admin users
-                                alert('Access denied. Admin privileges required.');
-                                window.location.href = 'index.html';
-                            }
-                        });
-                } else {
-                    // Redirect to login if not authenticated
-                    window.location.href = 'index.html';
-                }
-            });
+<script src="script.js"></script>
 
-            // Setup form handlers
-            document.getElementById('propertyForm').addEventListener('submit', handleAddProperty);
-            
-            // Load initial data
-            loadProperties();
-            loadBookings();
-            loadUsers();
-        }
-
-        // Tab Management
-        function switchTab(tabName) {
-            // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-
-            // Show selected tab
-            document.getElementById(tabName + 'Tab').classList.add('active');
-            event.target.classList.add('active');
-
-            // Load data for the tab
-            if (tabName === 'bookings') {
-                loadBookings();
-            } else if (tabName === 'users') {
-                loadUsers();
-            } else if (tabName === 'properties') {
-                loadProperties();
-            }
-        }
-
-        // Map Initialization
-        function initializeAdminMap() {
-            adminMap = L.map('adminMap').setView([selectedCoordinates.lat, selectedCoordinates.lng], 13);
-            
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(adminMap);
-
-            // Current marker
-            let currentMarker = L.marker([selectedCoordinates.lat, selectedCoordinates.lng]).addTo(adminMap);
-
-            // Click handler for map
-            adminMap.on('click', function(e) {
-                const { lat, lng } = e.latlng;
-                
-                // Update coordinates
-                selectedCoordinates = { lat, lng };
-                
-                // Update form fields
-                document.getElementById('propertyLat').value = lat.toFixed(10);
-                document.getElementById('propertyLng').value = lng.toFixed(10);
-                
-                // Update marker position
-                adminMap.removeLayer(currentMarker);
-                currentMarker = L.marker([lat, lng]).addTo(adminMap);
-            });
-
-            // Load existing properties on map
-            loadPropertiesOnMap();
-        }
-
-        // Load existing properties on admin map
-        function loadPropertiesOnMap() {
-            db.collection('properties').get().then((querySnapshot) => {
-                querySnapshot.forEach((doc) => {
-                    const property = doc.data();
-                    const marker = L.marker([property.lat, property.lng])
-                        .addTo(adminMap)
-                        .bindPopup(`
-                            <strong>${property.title}</strong><br>
-                            ${property.type} - ${property.price}<br>
-                            <small>Status: ${property.available ? 'Available' : 'Booked'}</small>
-                        `);
-                });
-            });
-        }
-
-        // Property Management
-        function handleAddProperty(e) {
-            e.preventDefault();
-            
-            const propertyData = {
-                title: document.getElementById('propertyTitle').value,
-                type: document.getElementById('propertyType').value,
-                location: document.getElementById('propertyLocation').value,
-                price: document.getElementById('propertyPrice').value,
-                description: document.getElementById('propertyDescription').value,
-                features: document.getElementById('propertyFeatures').value.split(',').map(f => f.trim()),
-                lat: parseFloat(document.getElementById('propertyLat').value),
-                lng: parseFloat(document.getElementById('propertyLng').value),
-                available: true,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                createdBy: currentUser.uid
-            };
-
-            db.collection('properties').add(propertyData)
-                .then(() => {
-                    showMessage('property', 'Property added successfully!', 'success');
-                    document.getElementById('propertyForm').reset();
-                    loadProperties();
-                    loadDashboardData();
-                    
-                    // Add marker to map
-                    L.marker([propertyData.lat, propertyData.lng])
-                        .addTo(adminMap)
-                        .bindPopup(`<strong>${propertyData.title}</strong><br>${propertyData.type} - ${propertyData.price}`);
-                })
-                .catch((error) => {
-                    showMessage('property', 'Error adding property: ' + error.message, 'error');
-                });
-        }
-
-        function loadProperties() {
-            const propertyList = document.getElementById('propertyList');
-            propertyList.innerHTML = '<div style="padding: 1rem; text-align: center; color: rgba(255,255,255,0.7);">Loading properties...</div>';
-
-            db.collection('properties').orderBy('createdAt', 'desc').get()
-                .then((querySnapshot) => {
-                    propertyList.innerHTML = '';
-                    
-                    querySnapshot.forEach((doc) => {
-                        const property = doc.data();
-                        const propertyElement = document.createElement('div');
-                        propertyElement.className = 'property-item';
-                        propertyElement.innerHTML = `
-                            <div class="property-info">
-                                <h4>${property.title}</h4>
-                                <p>${property.type} • ${property.location} • ${property.price}</p>
-                                <p style="font-size: 0.8rem; color: ${property.available ? '#28a745' : '#dc3545'};">
-                                    ${property.available ? 'Available' : 'Booked'}
-                                </p>
-                            </div>
-                            <div class="property-actions">
-                                <button class="btn-secondary" onclick="editProperty('${doc.id}')">Edit</button>
-                                <button class="btn-danger" onclick="deleteProperty('${doc.id}')">Delete</button>
-                            </div>
-                        `;
-                        propertyList.appendChild(propertyElement);
-                    });
-                })
-                .catch((error) => {
-                    propertyList.innerHTML = '<div style="padding: 1rem; text-align: center; color: #dc3545;">Error loading properties</div>';
-                });
-        }
-
-        function deleteProperty(propertyId) {
-            if (confirm('Are you sure you want to delete this property?')) {
-                db.collection('properties').doc(propertyId).delete()
-                    .then(() => {
-                        loadProperties();
-                        loadDashboardData();
-                        showMessage('property', 'Property deleted successfully!', 'success');
-                    })
-                    .catch((error) => {
-                        showMessage('property', 'Error deleting property: ' + error.message, 'error');
-                    });
-            }
-        }
-
-        function editProperty(propertyId) {
-            // This would open an edit form - simplified for this example
-            alert('Edit functionality would be implemented here. Property ID: ' + propertyId);
-        }
-
-        // Booking Management
-        function loadBookings() {
-            const bookingsTable = document.getElementById('bookingsTableBody');
-            bookingsTable.innerHTML = '<tr><td colspan="5" style="text-align: center; color: rgba(255,255,255,0.7);">Loading bookings...</td></tr>';
-
-            db.collection('bookings').orderBy('createdAt', 'desc').get()
-                .then((querySnapshot) => {
-                    bookingsTable.innerHTML = '';
-                    
-                    querySnapshot.forEach((doc) => {
-                        const booking = doc.data();
-                        const row = document.createElement('tr');
-                        
-                        const statusClass = booking.status === 'pending' ? 'status-pending' : 
-                                           booking.status === 'approved' ? 'status-approved' : 'status-rejected';
-                        
-                        row.innerHTML = `
-                            <td>${booking.propertyTitle}</td>
-                            <td>${booking.userEmail}</td>
-                            <td>${booking.createdAt ? new Date(booking.createdAt.toDate()).toLocaleDateString() : 'N/A'}</td>
-                            <td><span class="status-badge ${statusClass}">${booking.status.toUpperCase()}</span></td>
-                            <td>
-                                ${booking.status === 'pending' ? `
-                                    <button class="btn-secondary" onclick="updateBookingStatus('${doc.id}', 'approved')">Approve</button>
-                                    <button class="btn-danger" onclick="updateBookingStatus('${doc.id}', 'rejected')">Reject</button>
-                                ` : `
-                                    <button class="btn-secondary" onclick="updateBookingStatus('${doc.id}', 'pending')">Reset</button>
-                                `}
-                            </td>
-                        `;
-                        bookingsTable.appendChild(row);
-                    });
-                })
-                .catch((error) => {
-                    bookingsTable.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #dc3545;">Error loading bookings</td></tr>';
-                });
-        }
-
-        function updateBookingStatus(bookingId, newStatus) {
-            db.collection('bookings').doc(bookingId).update({
-                status: newStatus,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            })
-            .then(() => {
-                loadBookings();
-                loadDashboardData();
-                
-                // If approved, make property unavailable
-                if (newStatus === 'approved') {
-                    db.collection('bookings').doc(bookingId).get().then((doc) => {
-                        const booking = doc.data();
-                        if (booking.propertyId) {
-                            db.collection('properties').doc(booking.propertyId).update({
-                                available: false
-                            });
-                        }
-                    });
-                }
-                
-                // If rejected or reset to pending, make property available again
-                if (newStatus === 'rejected' || newStatus === 'pending') {
-                    db.collection('bookings').doc(bookingId).get().then((doc) => {
-                        const booking = doc.data();
-                        if (booking.propertyId) {
-                            db.collection('properties').doc(booking.propertyId).update({
-                                available: true
-                            });
-                        }
-                    });
-                }
-            })
-            .catch((error) => {
-                alert('Error updating booking status: ' + error.message);
-            });
-        }
-
-        // User Management
-        function loadUsers() {
-            const usersTable = document.getElementById('usersTableBody');
-            usersTable.innerHTML = '<tr><td colspan="5" style="text-align: center; color: rgba(255,255,255,0.7);">Loading users...</td></tr>';
-
-            db.collection('users').orderBy('createdAt', 'desc').get()
-                .then((querySnapshot) => {
-                    usersTable.innerHTML = '';
-                    
-                    querySnapshot.forEach((doc) => {
-                        const user = doc.data();
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${user.name || 'N/A'}</td>
-                            <td>${user.email}</td>
-                            <td>${user.phone || 'N/A'}</td>
-                            <td>${user.createdAt ? new Date(user.createdAt.toDate()).toLocaleDateString() : 'N/A'}</td>
-                            <td><span class="status-badge status-approved">ACTIVE</span></td>
-                        `;
-                        usersTable.appendChild(row);
-                    });
-                })
-                .catch((error) => {
-                    usersTable.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #dc3545;">Error loading users</td></tr>';
-                });
-        }
-
-        // Dashboard Stats
-        function loadDashboardData() {
-            // Load total properties
-            db.collection('properties').get().then((querySnapshot) => {
-                document.getElementById('totalProperties').textContent = querySnapshot.size;
-            });
-
-            // Load pending bookings
-            db.collection('bookings').where('status', '==', 'pending').get().then((querySnapshot) => {
-                document.getElementById('pendingBookings').textContent = querySnapshot.size;
-            });
-
-            // Load total users
-            db.collection('users').get().then((querySnapshot) => {
-                document.getElementById('totalUsers').textContent = querySnapshot.size;
-            });
-
-            // Load approved bookings
-            db.collection('bookings').where('status', '==', 'approved').get().then((querySnapshot) => {
-                document.getElementById('approvedBookings').textContent = querySnapshot.size;
-            });
-        }
-
-        // Utility Functions
-        function showMessage(type, message, messageType) {
-            const messageEl = document.getElementById(type + 'Message');
-            messageEl.textContent = message;
-            messageEl.className = `message ${messageType}`;
-            messageEl.style.display = 'block';
-            
-            setTimeout(() => {
-                messageEl.style.display = 'none';
-            }, 5000);
-        }
-
-        function logout() {
-            auth.signOut().then(() => {
-                window.location.href = 'index.html';
-            });
-        }
-
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', initializeAdmin);
-
-        // Global functions
-        window.switchTab = switchTab;
-        window.deleteProperty = deleteProperty;
-        window.editProperty = editProperty;
-        window.updateBookingStatus = updateBookingStatus;
-        window.logout = logout;
-    </script>
 </body>
 </html>
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Property</th>
-                                <th>User Email</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="bookingsTableBody">
-                            <!-- Bookings will be loaded here -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Users Tab -->
-        <div id="usersTab" class="tab-content">
-            <div class="admin-card">
-                <h3>Registered Users</h3>
-                <div class="table-container">
