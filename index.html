@@ -799,7 +799,7 @@
             </p>
         </div>
     </div>
-<script src="https://js.stripe.com/v3/"></script>
+
     <script>
         // Firebase Configuration (You'll need to replace this with your actual config)
         const firebaseConfig = {
@@ -821,6 +821,7 @@ const db = firebase.firestore();
         let userLocation = { lat: 19.2404498544239, lng: 73.13241886605059 }; // Dummy location
         let currentUser = null;
         let properties = [];
+        let selectedPropertyForPayment = null;
 
         // Sample Properties Data
         const sampleProperties = [
@@ -1294,7 +1295,7 @@ const db = firebase.firestore();
                 </div>
             `;
         }
-let selectedPropertyForPayment = null;
+
         // Booking Functions
         function bookProperty(propertyId) {
             if (!currentUser) {
@@ -1409,6 +1410,7 @@ function processPayment() {
 </div>
 </body>
 </html>
+
 
 
 
