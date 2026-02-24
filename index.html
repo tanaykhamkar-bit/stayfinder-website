@@ -1242,46 +1242,48 @@
             
             openPaymentModal(property);
         }
-        // Payment System
+        // ===== CLEAN PAYMENT SYSTEM =====
 let selectedPropertyForPayment = null;
 
 function openPaymentModal(property) {
     selectedPropertyForPayment = property;
 
-    document.getElementById('paymentPropertyTitle').innerText = property.title;
-    document.getElementById('paymentAmount').innerText = property.price;
+    document.getElementById("paymentPropertyTitle").innerText = property.title;
+    document.getElementById("paymentAmount").innerText = property.price;
 
-    document.getElementById('paymentModal').style.display = 'block';
+    document.getElementById("paymentModal").style.display = "block";
 }
 
 function closePaymentModal() {
-    document.getElementById('paymentModal').style.display = 'none';
+    document.getElementById("paymentModal").style.display = "none";
 }
 
 function processPayment() {
-    if (!selectedPropertyForPayment) return;
-
-    const property = selectedPropertyForPayment;
+    if (!selectedPropertyForPayment || !currentUser) {
+        alert("Please login first.");
+        return;
+    }
 
     const booking = {
-        propertyId: property.id,
+        propertyId: selectedPropertyForPayment.id,
+        propertyTitle: selectedPropertyForPayment.title,
+        propertyPrice: selectedPropertyForPayment.price,
         userId: currentUser.uid,
         userEmail: currentUser.email,
-        propertyTitle: property.title,
-        propertyPrice: property.price,
-        status: 'approved',
+        status: "approved",
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
 
-    db.collection('bookings').add(booking)
+    db.collection("bookings").add(booking)
         .then(() => {
             alert("Payment Successful! Booking Confirmed.");
             closePaymentModal();
         })
         .catch((error) => {
-            alert("Payment failed: " + error.message);
+            alert("Error: " + error.message);
         });
 }
+
 
         // Initialize App
         function initializeApp() {
@@ -1310,35 +1312,18 @@ function processPayment() {
         
     </script>
     
-    <!-- Payment Modal -->
-<div id="paymentModal" class="modal">
+<div id="paymentModal" style="display:none;" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closePaymentModal()">&times;</span>
         <h2>Complete Payment</h2>
         <p id="paymentPropertyTitle"></p>
         <p id="paymentAmount"></p>
-
-        <div style="margin-top:15px;">
-            <label>
-                <input type="radio" name="paymentMethod" value="upi" checked>
-                UPI
-            </label>
-            <br>
-            <label>
-                <input type="radio" name="paymentMethod" value="card">
-                Card
-            </label>
-        </div>
-
-        <div style="margin-top:15px;">
-            <button onclick="processPayment()" class="btn-primary">
-                Pay Now
-            </button>
-        </div>
+        <button onclick="processPayment()" class="btn-primary">Pay Now</button>
     </div>
 </div>
 </body>
 </html>
+
 
 
 
