@@ -1258,7 +1258,36 @@ function closePaymentModal() {
     document.getElementById("paymentModal").style.display = "none";
 }
 
-pk_test_51T4TqCF79cbNhh8odlGD34GN0uai7skc4jnSg87Izwpohe6xaCAIoYnXH2zR8yLaPBDkGzvyGvL7RHeGEFED9sSv00IaOgc9fF
+function processPayment() {
+
+    if (!selectedPropertyForPayment) {
+        alert("No property selected.");
+        return;
+    }
+
+    const stripe = Stripe("pk_test_51T4TqCF79cbNhh8odlGD34GN0uai7skc4jnSg87Izwpohe6xaCAIoYnXH2zR8yLaPBDkGzvyGvL7RHeGEFED9sSv00IaOgc9fF");
+
+    stripe.redirectToCheckout({
+        lineItems: [{
+            price_data: {
+                currency: "inr",
+                product_data: {
+                    name: selectedPropertyForPayment.title,
+                },
+                unit_amount: parseInt(selectedPropertyForPayment.price.replace(/[^\d]/g, "")) * 100,
+            },
+            quantity: 1,
+        }],
+        mode: "payment",
+        successUrl: window.location.href + "?success=true",
+        cancelUrl: window.location.href + "?canceled=true",
+    }).then(function (result) {
+        if (result.error) {
+            alert(result.error.message);
+        }
+    });
+
+}
 
 
         // Initialize App
@@ -1299,6 +1328,7 @@ pk_test_51T4TqCF79cbNhh8odlGD34GN0uai7skc4jnSg87Izwpohe6xaCAIoYnXH2zR8yLaPBDkGzv
 </div>
 </body>
 </html>
+
 
 
 
