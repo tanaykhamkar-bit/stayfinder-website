@@ -731,7 +731,7 @@
             </p>
         </div>
     </div>
-
+<script src="https://js.stripe.com/v3/"></script>
     <script>
         // Firebase Configuration (You'll need to replace this with your actual config)
         const firebaseConfig = {
@@ -1258,31 +1258,7 @@ function closePaymentModal() {
     document.getElementById("paymentModal").style.display = "none";
 }
 
-function processPayment() {
-    if (!selectedPropertyForPayment || !currentUser) {
-        alert("Please login first.");
-        return;
-    }
-
-    const booking = {
-        propertyId: selectedPropertyForPayment.id,
-        propertyTitle: selectedPropertyForPayment.title,
-        propertyPrice: selectedPropertyForPayment.price,
-        userId: currentUser.uid,
-        userEmail: currentUser.email,
-        status: "approved",
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-
-    db.collection("bookings").add(booking)
-        .then(() => {
-            alert("Payment Successful! Booking Confirmed.");
-            closePaymentModal();
-        })
-        .catch((error) => {
-            alert("Error: " + error.message);
-        });
-}
+pk_test_51T4TqCF79cbNhh8odlGD34GN0uai7skc4jnSg87Izwpohe6xaCAIoYnXH2zR8yLaPBDkGzvyGvL7RHeGEFED9sSv00IaOgc9fF
 
 
         // Initialize App
@@ -1323,6 +1299,7 @@ function processPayment() {
 </div>
 </body>
 </html>
+
 
 
 
