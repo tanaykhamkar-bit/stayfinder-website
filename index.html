@@ -1242,6 +1242,46 @@
             
             openPaymentModal(property);
         }
+        // Payment System
+let selectedPropertyForPayment = null;
+
+function openPaymentModal(property) {
+    selectedPropertyForPayment = property;
+
+    document.getElementById('paymentPropertyTitle').innerText = property.title;
+    document.getElementById('paymentAmount').innerText = property.price;
+
+    document.getElementById('paymentModal').style.display = 'block';
+}
+
+function closePaymentModal() {
+    document.getElementById('paymentModal').style.display = 'none';
+}
+
+function processPayment() {
+    if (!selectedPropertyForPayment) return;
+
+    const property = selectedPropertyForPayment;
+
+    const booking = {
+        propertyId: property.id,
+        userId: currentUser.uid,
+        userEmail: currentUser.email,
+        propertyTitle: property.title,
+        propertyPrice: property.price,
+        status: 'approved',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    db.collection('bookings').add(booking)
+        .then(() => {
+            alert("Payment Successful! Booking Confirmed.");
+            closePaymentModal();
+        })
+        .catch((error) => {
+            alert("Payment failed: " + error.message);
+        });
+}
 
         // Initialize App
         function initializeApp() {
@@ -1312,8 +1352,36 @@ async function processPayment() {
         <button onclick="closePaymentModal()" style="margin-top:10px; width:100%; padding:10px; background:#444; border:none; border-radius:8px; color:white;">Cancel</button>
     </div>
 </div>
+    <!-- Payment Modal -->
+<div id="paymentModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closePaymentModal()">&times;</span>
+        <h2>Complete Payment</h2>
+        <p id="paymentPropertyTitle"></p>
+        <p id="paymentAmount"></p>
+
+        <div style="margin-top:15px;">
+            <label>
+                <input type="radio" name="paymentMethod" value="upi" checked>
+                UPI
+            </label>
+            <br>
+            <label>
+                <input type="radio" name="paymentMethod" value="card">
+                Card
+            </label>
+        </div>
+
+        <div style="margin-top:15px;">
+            <button onclick="processPayment()" class="btn-primary">
+                Pay Now
+            </button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
+
 
 
 
